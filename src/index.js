@@ -100,7 +100,7 @@ async function runServer() {
             console.log('Check if kulala is sending the request body properly.');
             return res.status(400).json({
               error: 'Invalid JSON in request body',
-              hint: 'Make sure kulala is sending the JSON payload in the request body'
+              hint: 'Make sure kulala is sending the JSON payload in the request body',
             });
           }
 

@@ -1,6 +1,370 @@
-POST http://localhost:9423/api
-Content-Type: application/json; charset=utf-8
+@host = http://localhost:9423
+@contentType = application/json
+
+###############################################################################
+# JobSpy MCP Server - HTTP Client Test File
+# Compatible with: kulala.nvim, rest.nvim, nvim-http-client
+# Usage: Run requests with Neovim HTTP client plugin
+###############################################################################
+
+###############################################################################
+# HEALTH CHECK
+###############################################################################
+
+GET {{host}}/health
+
+>
+
+###############################################################################
+# DIRECT REST API - POST /api
+# The /api endpoint accepts method + params format
+###############################################################################
+
+### Basic Search - Indeed Only
+POST {{host}}/api
+Content-Type: {{contentType}}
 
 {
-  "site_names": "indeed"
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed",
+    "search_term": "software engineer",
+    "location": "San Francisco, CA",
+    "results_wanted": 5
+  }
 }
+
+>
+
+### Multi-Site Search - LinkedIn + Indeed
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "linkedin,indeed",
+    "search_term": "full stack developer",
+    "location": "New York, NY",
+    "results_wanted": 10
+  }
+}
+
+>
+
+### Remote Jobs Only
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed,linkedin",
+    "search_term": "devops engineer",
+    "is_remote": true,
+    "results_wanted": 10
+  }
+}
+
+>
+
+### Recent Posts - Last 24 Hours
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed",
+    "search_term": "python developer",
+    "location": "Austin, TX",
+    "hours_old": 24,
+    "results_wanted": 10
+  }
+}
+
+>
+
+### Full-Time Jobs Filter
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "linkedin",
+    "search_term": "data scientist",
+    "location": "Seattle, WA",
+    "job_type": "fulltime",
+    "results_wanted": 10
+  }
+}
+
+>
+
+### Contract Jobs Filter
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed",
+    "search_term": "react developer",
+    "location": "Remote",
+    "job_type": "contract",
+    "results_wanted": 10
+  }
+}
+
+>
+
+### Australia - Country Filter
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed",
+    "search_term": "product manager",
+    "location": "Sydney",
+    "country_indeed": "Australia",
+    "results_wanted": 10
+  }
+}
+
+>
+
+### UK - Country Filter
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed",
+    "search_term": "frontend developer",
+    "location": "London",
+    "country_indeed": "UK",
+    "results_wanted": 10
+  }
+}
+
+>
+
+### CSV Output Format
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed",
+    "search_term": "marketing manager",
+    "location": "Chicago, IL",
+    "results_wanted": 5,
+    "format": "csv"
+  }
+}
+
+>
+
+### LinkedIn with Full Descriptions
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "linkedin",
+    "search_term": "senior software engineer",
+    "location": "San Francisco, CA",
+    "linkedin_fetch_description": true,
+    "results_wanted": 5
+  }
+}
+
+>
+
+### Easy Apply Filter
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "linkedin",
+    "search_term": "software engineer",
+    "location": "Boston, MA",
+    "easy_apply": true,
+    "results_wanted": 10
+  }
+}
+
+>
+
+### Distance Filter - 25 Miles
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed",
+    "search_term": "project manager",
+    "location": "Denver, CO",
+    "distance": 25,
+    "results_wanted": 10
+  }
+}
+
+>
+
+### All Sites Search
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed,linkedin,zip_recruiter,glassdoor,google",
+    "search_term": "machine learning engineer",
+    "location": "Los Angeles, CA",
+    "results_wanted": 5
+  }
+}
+
+>
+
+### Internship Filter
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed,linkedin",
+    "search_term": "software engineering intern",
+    "location": "Atlanta, GA",
+    "job_type": "internship",
+    "results_wanted": 10
+  }
+}
+
+>
+
+### Part-Time Filter
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed",
+    "search_term": "graphic designer",
+    "location": "Miami, FL",
+    "job_type": "parttime",
+    "results_wanted": 10
+  }
+}
+
+>
+
+### Combined Filters - Senior Remote Python
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed,linkedin",
+    "search_term": "senior python developer",
+    "location": "Remote",
+    "is_remote": true,
+    "job_type": "fulltime",
+    "hours_old": 48,
+    "results_wanted": 10
+  }
+}
+
+>
+
+### Offset Pagination
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed",
+    "search_term": "javascript developer",
+    "location": "Portland, OR",
+    "offset": 10,
+    "results_wanted": 5
+  }
+}
+
+>
+
+### Invalid JSON (Error Test)
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed"
+  }
+
+>
+
+### Missing Site Names (Should use default)
+POST {{host}}/api
+Content-Type: {{contentType}}
+
+{
+  "method": "search_jobs",
+  "params": {
+    "search_term": "test job",
+    "results_wanted": 3
+  }
+}
+
+>
+
+###############################################################################
+# SSE TRANSPORT ENDPOINTS
+# Note: These require ENABLE_SSE=1 in environment
+###############################################################################
+
+### SSE Connection - Establishes SSE stream
+# GET {{host}}/sse
+# >
+#
+# Note: This opens a persistent SSE connection for real-time updates
+# The response will stream MCP protocol messages
+#
+# To send messages over SSE, use:
+# POST {{host}}/messages
+# Content-Type: {{contentType}}
+#
+# {
+#   "tool": "search_jobs",
+#   "params": {
+#     "site_names": "indeed",
+#     "search_term": "test"
+#   }
+# }
+
+###############################################################################
+# VARIABLE DEFINITIONS
+###############################################################################
+#
+# Variables used in this file:
+# - {{host}}: Base URL for the server (default: http://localhost:9423)
+# - {{contentType}}: Content-Type header value
+#
+# These can be overridden in your Neovim HTTP client settings
+#
+###############################################################################

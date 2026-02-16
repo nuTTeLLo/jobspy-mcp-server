@@ -18,6 +18,40 @@ Tests are not currently configured with a test runner. To run individual test fi
 node tests/jobSchema.test.js
 ```
 
+### HTTP Client Testing (Neovim)
+The project includes a comprehensive HTTP client test file for Neovim HTTP client plugins:
+- **File**: `tests/api.http`
+- **Compatible Plugins**: kulala.nvim, rest.nvim, nvim-http-client
+
+**Available Test Scenarios** (21 total):
+- Basic search (Indeed only)
+- Multi-site search (LinkedIn + Indeed)
+- Remote jobs filter
+- Recent posts (last 24 hours)
+- Job type filters (fulltime, contract, internship, parttime)
+- Country filters (Australia, UK)
+- Output formats (JSON, CSV)
+- LinkedIn full descriptions
+- Easy apply filter
+- Distance filter
+- All sites search
+- Combined filters
+- Offset pagination
+- Error handling tests
+
+**Usage** (with kulala.nvim):
+```bash
+:KulalaRun     # Run current request
+:KulalaRunAll  # Run all requests in file
+:KulalaSave    # Save response to file
+```
+
+**API Endpoints Tested**:
+- `GET /health` - Health check
+- `POST /api` - Direct REST API for search_jobs
+- `GET /sse` - SSE transport (documented)
+- `POST /messages` - SSE message handling (documented)
+
 ### Container Commands
 - `task build` - Build the jobspy container (requires task runner)
 - `task start` - Build container and start server (requires task runner)
@@ -152,6 +186,21 @@ The JobSpy MCP Server processes API parameters through a comprehensive pipeline:
 - API endpoint: `POST /api`
 - Accepts JSON payload: `{"method": "search_jobs", "params": {...}}`
 - Extracts parameters from `req.body.params`
+- All parameters use **snake_case** naming convention
+
+**Example Request**:
+```json
+{
+  "method": "search_jobs",
+  "params": {
+    "site_names": "indeed,linkedin",
+    "search_term": "software engineer",
+    "location": "San Francisco, CA",
+    "is_remote": true,
+    "results_wanted": 10
+  }
+}
+```
 
 #### 2. **Parameter Conversion**
 - Converts snake_case API parameters to camelCase internally
@@ -211,10 +260,28 @@ The JobSpy MCP Server processes API parameters through a comprehensive pipeline:
 - **HTTPS**: Use HTTPS in production environments
 
 ### Testing
-- **Test Files**: Place in `tests/` directory with `.test.js` extension
+- **Test Files**: Place in `tests/` directory with `.test.js` extension or `.http` for HTTP client tests
 - **Test Structure**: Arrange, Act, Assert pattern
 - **Mocking**: Mock external dependencies when needed
 - **Coverage**: Aim for good test coverage of critical paths
+
+**API Parameters Reference** (snake_case):
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `site_names` | string | `indeed` | Comma-separated: indeed,linkedin,zip_recruiter,glassdoor,google |
+| `search_term` | string | `software engineer` | Job search term |
+| `location` | string | `San Francisco, CA` | Search location |
+| `results_wanted` | integer | `20` | Number of results |
+| `hours_old` | integer | `72` | Max job age in hours |
+| `country_indeed` | string | `USA` | Country for Indeed |
+| `is_remote` | boolean | `false` | Remote jobs only |
+| `job_type` | string | - | fulltime/parttime/internship/contract |
+| `format` | string | `json` | Output format (json/csv) |
+| `linkedin_fetch_description` | boolean | `false` | Fetch LinkedIn descriptions |
+| `distance` | integer | `50` | Search radius in miles |
+| `easy_apply` | boolean | `false` | Easy apply filter |
+| `offset` | integer | `0` | Pagination offset |
 
 ### Performance
 - **Async/Await**: Use for asynchronous operations
@@ -261,5 +328,6 @@ The JobSpy MCP Server processes API parameters through a comprehensive pipeline:
 - **Command Building**: Automatic conversion of validated parameters to Python command arguments
 - **Container Management**: Start script with restart functionality for easy deployment
 - **Comprehensive Logging**: Step-by-step logging of parameter processing for debugging
-- **MCP Integration**: Dual support for MCP protocol and REST API endpoints</content>
+- **MCP Integration**: Dual support for MCP protocol and REST API endpoints
+- **HTTP Client Testing**: Comprehensive `tests/api.http` file with 21 test scenarios for Neovim HTTP client plugins</content>
 <parameter name="filePath">/Users/adrian/devenv/jobspy-mcp-server/AGENTS.md
