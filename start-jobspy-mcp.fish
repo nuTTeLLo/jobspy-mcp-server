@@ -45,7 +45,7 @@ if test "$restart" != "true"
     else if podman ps --filter "name=jobspy-mcp-server-instance" --filter "status=running" | grep -q jobspy-mcp-server-instance
         echo "Container is already running."
     else
-        podman run -d --name jobspy-mcp-server -p 9423:9423 jobspy-mcp-server
+        podman run --rm --name jobspy-mcp-server -p 9423:9423 jobspy-mcp-server
         echo "JobSpy MCP server started in background. Container name: jobspy-mcp-server"
     end
 else
