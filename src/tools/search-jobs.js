@@ -172,8 +172,8 @@ export function searchJobsHandler(params) {
     logger.info('Validated parameters', { validatedParams });
 
     const args = buildCommandArgs(validatedParams);
-    const cmd = `sudo docker run jobspy ${args.join(' ')}`;
-    logger.info(`Spawning process with args: ${cmd}`);
+    const cmd = `python /app/jobspy/main.py ${args.join(' ')}`;
+    logger.info(`Executing jobspy command: ${cmd}`);
 
     const timeout = params.timeout || 60000; // Default timeout of 60 seconds
     result = execSync(cmd, { timeout }).toString();
@@ -237,6 +237,7 @@ function buildCommandArgs(params) {
   if (params.resultsWanted) {
     args.push('--results_wanted', `${params.resultsWanted}`);
   }
+  // Boolean flags (store_true in argparse) - only add when true
   if (params.easyApply) {
     args.push('--easy_apply');
   }
@@ -255,15 +256,15 @@ function buildCommandArgs(params) {
   if (params.countryIndeed) {
     args.push('--country_indeed', `"${params.countryIndeed}"`);
   }
-  if (params.isRemote) {
-    args.push('--is_remote');
-  }
+  // is_remote expects a value (true/false), not a store_true flag
+  args.push('--is_remote', params.isRemote ? 'True' : 'False');
   if (params.linkedinFetchDescription) {
     args.push('--linkedin_fetch_description');
   }
   if (params.linkedinCompanyIds) {
     args.push('--linkedin_company_ids', `"${params.linkedinCompanyIds}"`);
   }
+  // Boolean flag (store_true in argparse) - only add when true
   if (params.enforceAnnualSalary) {
     args.push('--enforce_annual_salary');
   }
