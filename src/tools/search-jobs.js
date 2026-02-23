@@ -1,8 +1,8 @@
-import logger from '../logger.js';
-import { searchParams } from '../schemas/searchParamsSchema.js';
-import { execSync } from 'node:child_process';
-import { z } from 'zod';
-import changeCase from 'change-case-object';
+import logger from "../logger.js";
+import { searchParams } from "../schemas/searchParamsSchema.js";
+import { execSync } from "node:child_process";
+import { z } from "zod";
+import changeCase from "change-case-object";
 
 /**
  * @typedef {Object} JobSearchParams
@@ -31,13 +31,13 @@ import changeCase from 'change-case-object';
 
 export const searchJobsTool = (server, sseManager) =>
   server.tool(
-    'search_jobs',
-    'Search for jobs across various job listing websites',
+    "search_jobs",
+    "Search for jobs across various job listing websites",
     searchParams,
     async (params, extra) => {
       let progressInterval;
       try {
-        logger.info('Received search_jobs request', { params, extra });
+        logger.info("Received search_jobs request", { params, extra });
 
         // Track progress for SSE clients
         if (extra.sessionId && sseManager.hasConnection(extra.sessionId)) {
@@ -51,12 +51,12 @@ export const searchJobsTool = (server, sseManager) =>
             // Send progress to all connected clients
             sseManager.notificationProgress(
               {
-                type: 'progress',
-                tool: 'search_jobs',
+                type: "progress",
+                tool: "search_jobs",
                 progress,
                 message: `Searching for jobs (${progress}%)...`,
               },
-              extra.sessionId
+              extra.sessionId,
             );
           }, 2000);
         }
@@ -72,12 +72,12 @@ export const searchJobsTool = (server, sseManager) =>
           if (extra.sessionId && sseManager.hasConnection(extra.sessionId)) {
             sseManager.notificationProgress(
               {
-                type: 'progress',
-                tool: 'search_jobs',
+                type: "progress",
+                tool: "search_jobs",
                 progress: 100,
-                message: 'Job search completed',
+                message: "Job search completed",
               },
-              extra.sessionId
+              extra.sessionId,
             );
           }
         }
@@ -86,7 +86,7 @@ export const searchJobsTool = (server, sseManager) =>
           isError: false,
           content: [
             {
-              type: 'text',
+              type: "text",
               text: JSON.stringify(result, null, 2),
             },
           ],
@@ -95,16 +95,16 @@ export const searchJobsTool = (server, sseManager) =>
         if (progressInterval) {
           clearInterval(progressInterval);
         }
-        logger.error('Error in search_jobs handler', { error: error.message });
+        logger.error("Error in search_jobs handler", { error: error.message });
         return {
           isError: true,
           error: {
             message: error.message,
-            code: 'INTERNAL_SERVER_ERROR',
+            code: "INTERNAL_SERVER_ERROR",
           },
         };
       }
-    }
+    },
   );
 
 /**
@@ -148,7 +148,7 @@ function convertToISODate(dateStr) {
 export function searchJobsHandler(params) {
   let result;
   try {
-    logger.info('Starting job search with parameters', { params });
+    logger.info("Starting job search with parameters", { params });
 
     // Clean params by removing empty strings and 0 values
     const cleanedParams = {};
@@ -157,7 +157,7 @@ export function searchJobsHandler(params) {
       if (
         value === null ||
         value === undefined ||
-        value === '' ||
+        value === "" ||
         value === 0
       ) {
         continue;
@@ -165,14 +165,14 @@ export function searchJobsHandler(params) {
       cleanedParams[key] = value;
     }
 
-    logger.info('Cleaned parameters', { cleanedParams });
+    logger.info("Cleaned parameters", { cleanedParams });
 
     const validatedParams = z.object(searchParams).parse(cleanedParams);
 
-    logger.info('Validated parameters', { validatedParams });
+    logger.info("Validated parameters", { validatedParams });
 
     const args = buildCommandArgs(validatedParams);
-    const cmd = `python /app/jobspy/main.py ${args.join(' ')}`;
+    const cmd = `python /app/jobspy/main.py ${args.join(" ")}`;
     logger.info(`Executing jobspy command: ${cmd}`);
 
     const timeout = params.timeout || 60000; // Default timeout of 60 seconds
@@ -192,14 +192,27 @@ export function searchJobsHandler(params) {
       return jobCamelCase;
     });
 
-    logger.info(`Found jobs: ${data.length}`);
+    // Log after camelCase conversion
+    if (data.length > 0) {
+      logger.info("After camelCase conversion", {
+        firstJob: data[0],
+      });
+    }
+
+    // Map 'site' field to 'source' for frontend compatibility
+    const jobsWithSource = (data || []).map((job) => ({
+      ...job,
+      source: job.site,
+    }));
+
+    logger.info(`Found jobs: ${jobsWithSource.length}`);
     return {
-      count: data.length || 0,
-      message: 'Job search completed successfully',
-      jobs: data || [],
+      count: jobsWithSource.length || 0,
+      message: "Job search completed successfully",
+      jobs: jobsWithSource,
     };
   } catch (error) {
-    logger.error('Error in searchJobsHandler', {
+    logger.error("Error in searchJobsHandler", {
       error: error.message,
       result,
     });
@@ -217,63 +230,65 @@ function buildCommandArgs(params) {
 
   // Add each parameter as a command line argument
   if (params.siteNames) {
-    args.push('--site_name', `"${params.siteNames}"`);
+    args.push("--site_name", `"${params.siteNames}"`);
   }
   if (params.searchTerm) {
-    args.push('--search_term', `"${params.searchTerm}"`);
+    args.push("--search_term", `"${params.searchTerm}"`);
   }
   if (params.location) {
-    args.push('--location', `"${params.location}"`);
+    args.push("--location", `"${params.location}"`);
   }
   if (params.distance) {
-    args.push('--distance', `${params.distance}`);
+    args.push("--distance", `${params.distance}`);
   }
   if (params.jobType) {
-    args.push('--job_type', `${params.jobType}`);
+    args.push("--job_type", `${params.jobType}`);
   }
   if (params.googleSearchTerm) {
-    args.push('--google_search_term', `"${params.googleSearchTerm}"`);
+    args.push("--google_search_term", `"${params.googleSearchTerm}"`);
   }
   if (params.resultsWanted) {
-    args.push('--results_wanted', `${params.resultsWanted}`);
+    args.push("--results_wanted", `${params.resultsWanted}`);
   }
   // Boolean flags (store_true in argparse) - only add when true
   if (params.easyApply) {
-    args.push('--easy_apply');
+    args.push("--easy_apply");
   }
   if (params.descriptionFormat) {
-    args.push('--description_format', `${params.descriptionFormat}`);
+    args.push("--description_format", `${params.descriptionFormat}`);
   }
   if (params.offset) {
-    args.push('--offset', `${params.offset}`);
+    args.push("--offset", `${params.offset}`);
   }
   if (params.hoursOld) {
-    args.push('--hours_old', `${params.hoursOld}`);
+    args.push("--hours_old", `${params.hoursOld}`);
   }
   if (params.verbose !== undefined) {
-    args.push('--verbose', `${params.verbose}`);
+    args.push("--verbose", `${params.verbose}`);
   }
   if (params.countryIndeed) {
-    args.push('--country_indeed', `"${params.countryIndeed}"`);
+    args.push("--country_indeed", `"${params.countryIndeed}"`);
   }
-  // is_remote expects a value (true/false), not a store_true flag
-  args.push('--is_remote', params.isRemote ? 'True' : 'False');
+  // is_remote is a store_true flag - only add when true
+  if (params.isRemote) {
+    args.push("--is_remote");
+  }
   if (params.linkedinFetchDescription) {
-    args.push('--linkedin_fetch_description');
+    args.push("--linkedin_fetch_description");
   }
   if (params.linkedinCompanyIds) {
-    args.push('--linkedin_company_ids', `"${params.linkedinCompanyIds}"`);
+    args.push("--linkedin_company_ids", `"${params.linkedinCompanyIds}"`);
   }
   // Boolean flag (store_true in argparse) - only add when true
   if (params.enforceAnnualSalary) {
-    args.push('--enforce_annual_salary');
+    args.push("--enforce_annual_salary");
   }
   if (params.proxies) {
-    args.push('--proxies', `"${params.proxies}"`);
+    args.push("--proxies", `"${params.proxies}"`);
   }
   if (params.caCert) {
-    args.push('--ca_cert', `"${params.caCert}"`);
+    args.push("--ca_cert", `"${params.caCert}"`);
   }
-  args.push('--format', params.format || 'json');
+  args.push("--format", params.format || "json");
   return args;
 }

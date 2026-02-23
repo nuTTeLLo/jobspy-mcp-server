@@ -4,6 +4,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import express from 'express';
 import cors from 'cors';
 import logger from './logger.js';
+import changeCase from 'change-case-object';
 import SseManager from './sseManager.js';
 import {
   searchJobsPrompt,
@@ -107,7 +108,9 @@ async function runServer() {
           const params = req.body.params || req.body;
           console.log('Extracted params from request:', JSON.stringify(params, null, 2));
           console.log('Extraction method:', req.body.params ? 'req.body.params' : 'req.body');
-          const data = searchJobsHandler(params);
+          // Convert snake_case params to camelCase
+          const camelCaseParams = changeCase.camelCase(params);
+          const data = searchJobsHandler(camelCaseParams);
           console.log('=== API REQUEST COMPLETED ===');
           res.json(data);
         });

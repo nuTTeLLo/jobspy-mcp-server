@@ -64,8 +64,8 @@ def parse_args():
     )
     parser.add_argument(
         "--is_remote",
-        type=lambda x: x.lower() == "true",
-        help="Whether to search for remote jobs only (true/false)",
+        action="store_true",
+        help="Whether to search for remote jobs only",
     )
     parser.add_argument(
         "--linkedin_fetch_description",
