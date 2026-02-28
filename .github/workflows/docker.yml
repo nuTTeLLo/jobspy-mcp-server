@@ -37,6 +37,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
+            type=raw,value=latest,enable=true
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
@@ -54,12 +55,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Tag Latest
-        uses: EndBug/latest-tag@latest # Creates/updates 'latest' tag
-        with:
-          ref: latest
-          description: "Latest stable package build"
 
   security-scan:
     runs-on: ubuntu-latest
