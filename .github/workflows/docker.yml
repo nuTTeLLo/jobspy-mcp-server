@@ -75,12 +75,12 @@ jobs:
         run: echo "repo=${GITHUB_REPOSITORY@L}" >> $GITHUB_OUTPUT
 
       - name: Pull the image
-        run: docker pull ghcr.io/${{ steps.lowercase.outputs.repo }}:${{ github.sha }}
+        run: docker pull ghcr.io/${{ steps.lowercase.outputs.repo }}:sha-${{ github.sha }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/${{ steps.lowercase.outputs.repo }}:${{ github.sha }}
+          image-ref: ghcr.io/${{ steps.lowercase.outputs.repo }}:sha-${{ github.sha }}
           severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
           format: sarif
           output: trivy-results.sarif
