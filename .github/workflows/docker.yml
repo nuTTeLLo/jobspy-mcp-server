@@ -55,6 +55,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Tag Latest
+        uses: EndBug/latest-tag@latest # Creates/updates 'latest' tag
+        with:
+          ref: latest
+          description: "Latest stable package build"
+
   security-scan:
     runs-on: ubuntu-latest
     needs: build-and-push
