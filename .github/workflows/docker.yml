@@ -70,10 +70,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.CR_PAT }}
 
+      - name: Debug image reference
+        run: echo "ghcr.io/${{ github.repository }}:${{ github.sha }}"
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/nuttello/jobspy-mcp-server:sha-${{ github.sha }}
+          image-ref: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
           severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
           format: sarif
           output: trivy-results.sarif
