@@ -74,6 +74,9 @@ jobs:
         id: lowercase
         run: echo "repo=${GITHUB_REPOSITORY@L}" >> $GITHUB_OUTPUT
 
+      - name: Pull the image
+        run: docker pull ghcr.io/${{ steps.lowercase.outputs.repo }}:${{ github.sha }}
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
