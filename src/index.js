@@ -3,6 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import express from 'express';
 import cors from 'cors';
+import changeCase from 'change-case-object';
 import logger from './logger.js';
 import SseManager from './sseManager.js';
 import {
@@ -107,7 +108,9 @@ async function runServer() {
           const params = req.body.params || req.body;
           console.log('Extracted params from request:', JSON.stringify(params, null, 2));
           console.log('Extraction method:', req.body.params ? 'req.body.params' : 'req.body');
-          const data = searchJobsHandler(params);
+          const camelCaseParams = changeCase.camelCase(params);
+          console.log('Converted to camelCase:', JSON.stringify(camelCaseParams, null, 2));
+          const data = searchJobsHandler(camelCaseParams);
           console.log('=== API REQUEST COMPLETED ===');
           res.json(data);
         });
