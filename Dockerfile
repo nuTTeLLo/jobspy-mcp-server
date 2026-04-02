@@ -1,17 +1,17 @@
 FROM python:3.10-slim
 
-# Install Node.js and pnpm
-RUN apt-get update && apt-get install -y curl && \
-  curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-  apt-get install -y nodejs && \
-  npm install -g pnpm && \
+# Install Bun
+RUN apt-get update && apt-get install -y curl unzip && \
+  curl -fsSL https://bun.sh/install | bash && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/root/.bun/bin:$PATH"
 
 WORKDIR /app
 
 # Install MCP server dependencies
-COPY package*.json ./
-RUN pnpm install --frozen-lockfile --prod
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production
 
 # Install jobspy dependencies
 COPY jobspy/requirements.txt jobspy/requirements.txt
@@ -24,4 +24,4 @@ COPY . .
 
 EXPOSE 9423
 
-CMD ["pnpm", "start"]
+CMD ["bun", "src/index.js"]
