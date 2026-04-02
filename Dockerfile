@@ -11,16 +11,15 @@ WORKDIR /app
 
 # Install MCP server dependencies
 COPY package*.json ./
-RUN pnpm install --no-frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod
 
 # Install jobspy dependencies
 COPY jobspy/requirements.txt jobspy/requirements.txt
 RUN pip install --no-cache-dir -r jobspy/requirements.txt
 
-# Copy .env file
-COPY .env .
-
 # Copy all code
+# NOTE: Pass runtime config via environment variables (docker run -e / k8s Secret)
+# Do NOT copy .env into the image — see .env.example for required variables
 COPY . .
 
 EXPOSE 9423

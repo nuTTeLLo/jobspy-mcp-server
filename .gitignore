@@ -3,3 +3,7 @@ node_modules
 dist
 tmp
 
+# Environment files — never commit real secrets
+.env
+.env.*
+!.env.example

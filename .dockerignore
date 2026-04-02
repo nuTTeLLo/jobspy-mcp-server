@@ -1,0 +1,8 @@
+node_modules
+.node_modules.nosync
+.git
+.env
+.env.*
+*.log
+dist
+tmp

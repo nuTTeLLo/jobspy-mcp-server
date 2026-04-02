@@ -168,6 +168,15 @@ export const searchParams = {
   caCert: z
     .string()
     .nullable()
+    .refine(
+      (val) => {
+        if (val === null) return true;
+        // Reject absolute paths, path traversal, and non-cert extensions
+        if (val.startsWith('/') || val.includes('..')) return false;
+        return /\.(pem|crt)$/i.test(val);
+      },
+      { message: 'caCert must be a relative path ending in .pem or .crt with no path traversal' }
+    )
     .describe('Path to CA Certificate file for proxies')
     .default(null),
   format: z.enum(['json', 'csv']).describe('Output format').default('json'),

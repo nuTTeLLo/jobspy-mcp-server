@@ -1,6 +1,6 @@
 import logger from "../logger.js";
 import { searchParams } from "../schemas/searchParamsSchema.js";
-import { execSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { z } from "zod";
 import changeCase from "change-case-object";
 
@@ -37,7 +37,7 @@ export const searchJobsTool = (server, sseManager) =>
     async (params, extra) => {
       let progressInterval;
       try {
-        logger.info("Received search_jobs request", { params, extra });
+        logger.info("Received search_jobs request", { params: redactSensitive(params), extra });
 
         // Track progress for SSE clients
         if (extra.sessionId && sseManager.hasConnection(extra.sessionId)) {
@@ -145,10 +145,17 @@ function convertToISODate(dateStr) {
  * @param {JobSearchParams} params - Search parameters
  * @returns {Promise<object>} Search results
  */
+function redactSensitive(params) {
+  const redacted = { ...params };
+  if (redacted.proxies) redacted.proxies = '[REDACTED]';
+  if (redacted.caCert) redacted.caCert = '[REDACTED]';
+  return redacted;
+}
+
 export function searchJobsHandler(params) {
   let result;
   try {
-    logger.info("Starting job search with parameters", { params });
+    logger.info("Starting job search with parameters", { params: redactSensitive(params) });
 
     // Clean params by removing empty strings and 0 values
     const cleanedParams = {};
@@ -160,18 +167,25 @@ export function searchJobsHandler(params) {
       cleanedParams[key] = value;
     }
 
-    logger.info("Cleaned parameters", { cleanedParams });
+    logger.info("Cleaned parameters", { cleanedParams: redactSensitive(cleanedParams) });
 
     const validatedParams = z.object(searchParams).parse(cleanedParams);
 
-    logger.info("Validated parameters", { validatedParams });
+    logger.info("Validated parameters", { validatedParams: redactSensitive(validatedParams) });
 
     const args = buildCommandArgs(validatedParams);
-    const cmd = `python /app/jobspy/main.py ${args.join(" ")}`;
-    logger.info(`Executing jobspy command: ${cmd}`);
+    logger.info("Executing jobspy command", { args: args.map((a, i) =>
+      (args[i - 1] === '--proxies' || args[i - 1] === '--ca_cert') ? '[REDACTED]' : a
+    )});
 
     const timeout = params.timeout || 60000; // Default timeout of 60 seconds
-    result = execSync(cmd, { timeout }).toString();
+    const proc = spawnSync('python', ['/app/jobspy/main.py', ...args], { timeout, encoding: 'utf8' });
+
+    if (proc.status !== 0) {
+      throw new Error(proc.stderr || `Process exited with code ${proc.status}`);
+    }
+
+    result = proc.stdout;
 
     const parsedData = JSON.parse(result);
 
@@ -212,44 +226,44 @@ function buildCommandArgs(params) {
 
   // Add each parameter as a command line argument
   if (params.siteNames) {
-    args.push("--site_name", `"${params.siteNames}"`);
+    args.push("--site_name", params.siteNames);
   }
   if (params.searchTerm) {
-    args.push("--search_term", `"${params.searchTerm}"`);
+    args.push("--search_term", params.searchTerm);
   }
   if (params.location) {
-    args.push("--location", `"${params.location}"`);
+    args.push("--location", params.location);
   }
   if (params.distance) {
-    args.push("--distance", `${params.distance}`);
+    args.push("--distance", String(params.distance));
   }
   if (params.jobType) {
-    args.push("--job_type", `${params.jobType}`);
+    args.push("--job_type", params.jobType);
   }
   if (params.googleSearchTerm) {
-    args.push("--google_search_term", `"${params.googleSearchTerm}"`);
+    args.push("--google_search_term", params.googleSearchTerm);
   }
   if (params.resultsWanted) {
-    args.push("--results_wanted", `${params.resultsWanted}`);
+    args.push("--results_wanted", String(params.resultsWanted));
   }
   // Boolean flags (store_true in argparse) - only add when true
   if (params.easyApply) {
     args.push("--easy_apply");
   }
   if (params.descriptionFormat) {
-    args.push("--description_format", `${params.descriptionFormat}`);
+    args.push("--description_format", params.descriptionFormat);
   }
   if (params.offset) {
-    args.push("--offset", `${params.offset}`);
+    args.push("--offset", String(params.offset));
   }
   if (params.hoursOld) {
-    args.push("--hours_old", `${params.hoursOld}`);
+    args.push("--hours_old", String(params.hoursOld));
   }
   if (params.verbose !== undefined) {
-    args.push("--verbose", `${params.verbose}`);
+    args.push("--verbose", String(params.verbose));
   }
   if (params.countryIndeed) {
-    args.push("--country_indeed", `"${params.countryIndeed}"`);
+    args.push("--country_indeed", params.countryIndeed);
   }
   // is_remote expects a value (true/false), not a store_true flag
   args.push("--is_remote", params.isRemote ? "True" : "False");
@@ -257,17 +271,17 @@ function buildCommandArgs(params) {
     args.push("--linkedin_fetch_description");
   }
   if (params.linkedinCompanyIds) {
-    args.push("--linkedin_company_ids", `"${params.linkedinCompanyIds}"`);
+    args.push("--linkedin_company_ids", params.linkedinCompanyIds);
   }
   // Boolean flag (store_true in argparse) - only add when true
   if (params.enforceAnnualSalary) {
     args.push("--enforce_annual_salary");
   }
   if (params.proxies) {
-    args.push("--proxies", `"${params.proxies}"`);
+    args.push("--proxies", params.proxies);
   }
   if (params.caCert) {
-    args.push("--ca_cert", `"${params.caCert}"`);
+    args.push("--ca_cert", params.caCert);
   }
   args.push("--format", params.format || "json");
   return args;

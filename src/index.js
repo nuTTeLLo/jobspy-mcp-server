@@ -51,8 +51,11 @@ async function runServer() {
         // Create Express app
         const app = express();
 
-        // Configure CORS
-        app.use(cors());
+        // Configure CORS — restrict to explicit allowlist via CORS_ORIGINS env var
+        const allowedOrigins = process.env.CORS_ORIGINS
+          ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+          : false;
+        app.use(cors({ origin: allowedOrigins }));
 
         // Configure Express middleware
         app.use(express.json());
@@ -88,30 +91,15 @@ async function runServer() {
         });
 
         app.post('/api', async (req, res) => {
-          console.log('=== API REQUEST RECEIVED ===');
-          console.log('Raw req.body:', req.body);
-          console.log('req.body type:', typeof req.body);
-          console.log('req.rawBody:', req.rawBody);
-          console.log('req.headers:', JSON.stringify(req.headers, null, 2));
-          console.log('req.method:', req.method);
-          console.log('req.url:', req.url);
-
           if (!req.body || Object.keys(req.body).length === 0) {
-            console.log('ERROR: Request body is empty! This indicates JSON parsing failed.');
-            console.log('Check if kulala is sending the request body properly.');
             return res.status(400).json({
               error: 'Invalid JSON in request body',
-              hint: 'Make sure kulala is sending the JSON payload in the request body',
             });
           }
 
           const params = req.body.params || req.body;
-          console.log('Extracted params from request:', JSON.stringify(params, null, 2));
-          console.log('Extraction method:', req.body.params ? 'req.body.params' : 'req.body');
           const camelCaseParams = changeCase.camelCase(params);
-          console.log('Converted to camelCase:', JSON.stringify(camelCaseParams, null, 2));
           const data = searchJobsHandler(camelCaseParams);
-          console.log('=== API REQUEST COMPLETED ===');
           res.json(data);
         });
 
