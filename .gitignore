@@ -7,3 +7,7 @@ tmp
 .env
 .env.*
 !.env.example
+
+# Python bytecode (vendored jobspy)
+__pycache__/
+*.pyc

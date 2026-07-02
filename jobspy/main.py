@@ -65,6 +65,7 @@ def parse_args():
     parser.add_argument(
         "--is_remote",
         type=lambda x: x.lower() == "true",
+        default=False,
         help="Whether to search for remote jobs only (true/false)",
     )
     parser.add_argument(

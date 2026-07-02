@@ -6,12 +6,12 @@ export const searchParams = {
       z
         .string()
         .describe(
-          'Comma-separated list of job sites to search. Options: indeed,linkedin,zip_recruiter,glassdoor,google,bayt,naukri'
+          'Comma-separated list of job sites to search. Options: indeed,linkedin,zip_recruiter,glassdoor,google,bayt,naukri,seek'
         ),
       z
         .array(z.string())
         .describe(
-          'Array of job sites to search. Options: indeed,linkedin,zip_recruiter,glassdoor,google,bayt,naukri'
+          'Array of job sites to search. Options: indeed,linkedin,zip_recruiter,glassdoor,google,bayt,naukri,seek'
         ),
     ])
     .transform((val) => {
@@ -36,12 +36,13 @@ export const searchParams = {
           'google',
           'bayt',
           'naukri',
+          'seek',
         ];
         return sites.every((site) => validSites.includes(site));
       },
       {
         message:
-          'Invalid site names. Allowed values: indeed, linkedin, zip_recruiter, glassdoor, google, bayt, naukri',
+          'Invalid site names. Allowed values: indeed, linkedin, zip_recruiter, glassdoor, google, bayt, naukri, seek',
       }
     )
     .default('indeed'),

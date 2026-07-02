@@ -9,7 +9,7 @@ import changeCase from "change-case-object";
 
 /**
  * @typedef {Object} JobSearchParams
- * @property {string} [siteNames] - Names of job sites to search (linkedin, zip_recruiter, indeed, glassdoor, google, bayt)
+ * @property {string} [siteNames] - Names of job sites to search (linkedin, zip_recruiter, indeed, glassdoor, google, bayt, naukri, seek)
  * @property {string} [searchTerm] - Term to search for
  * @property {string} [location] - Job location
  * @property {number} [distance] - Distance in miles, default 50
