@@ -99,8 +99,13 @@ async function runServer() {
 
           const params = req.body.params || req.body;
           const camelCaseParams = changeCase.camelCase(params);
-          const data = searchJobsHandler(camelCaseParams);
-          res.json(data);
+          try {
+            const data = await searchJobsHandler(camelCaseParams);
+            res.json(data);
+          } catch (error) {
+            logger.error('Error in /api handler', { error: error.message });
+            res.status(500).json({ error: error.message });
+          }
         });
 
         // Start the Express server
