@@ -175,7 +175,10 @@ export async function searchJobsHandler(params) {
     logger.info("Validated parameters", { validatedParams });
 
     const args = buildCommandArgs(validatedParams);
-    const cmd = `python /app/jobspy/main.py ${args.join(" ")}`;
+    // Defaults match the container image; override for local dev (e.g. venv python + repo-relative script)
+    const pythonBin = process.env.JOBSPY_PYTHON || "python";
+    const scriptPath = process.env.JOBSPY_SCRIPT || "/app/jobspy/main.py";
+    const cmd = `${pythonBin} ${scriptPath} ${args.join(" ")}`;
     logger.info(`Executing jobspy command: ${cmd}`);
 
     const timeout = params.timeout || 300000; // Default timeout of 5 minutes
