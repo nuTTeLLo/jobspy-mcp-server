@@ -76,6 +76,11 @@ class LinkedIn(Scraper):
         :return: job_response
         """
         self.scraper_input = scraper_input
+        # LinkedIn has no country parameter — it only filters on the location string,
+        # so fold the requested country into it or results come back worldwide.
+        search_location = self._build_search_location(scraper_input)
+        if scraper_input.country and scraper_input.country != Country.WORLDWIDE:
+            self.country = scraper_input.country.value[0].split(",")[0]
         job_list: list[JobPost] = []
         seen_ids = set()
         start = scraper_input.offset // 10 * 10 if scraper_input.offset else 0
@@ -93,7 +98,7 @@ class LinkedIn(Scraper):
             )
             params = {
                 "keywords": scraper_input.search_term,
-                "location": scraper_input.location,
+                "location": search_location,
                 "distance": scraper_input.distance,
                 "f_WT": 2 if scraper_input.is_remote else None,
                 "f_JT": (
@@ -317,9 +322,39 @@ class LinkedIn(Scraper):
                 )
             elif len(parts) == 3:
                 city, state, country = parts
-                country = Country.from_string(country)
+                try:
+                    country = Country.from_string(country)
+                except ValueError:
+                    # LinkedIn returns countries outside the Country enum; keep the
+                    # raw string rather than failing the whole scrape
+                    log.warning(f"LinkedIn: unrecognized country '{country}'")
                 location = Location(city=city, state=state, country=country)
         return location
+
+    @staticmethod
+    def _build_search_location(scraper_input: ScraperInput) -> str | None:
+        """
+        LinkedIn only scopes results by its `location` query param, so the requested
+        country has to be appended to it (e.g. "Remote" -> "Remote, Australia").
+        :param scraper_input
+        :return: location string to search with
+        """
+        location = (scraper_input.location or "").strip()
+        country = scraper_input.country
+        if not country or country == Country.WORLDWIDE:
+            return location or None
+
+        alias = country.value[0].split(",")[0].strip()
+        # Acronym aliases ("usa", "uk") read wrong through .title()
+        country_name = alias.upper() if len(alias) <= 3 else alias.title()
+        if not location:
+            return country_name
+        # Don't double up when the user already named the country. Match on word
+        # boundaries so short aliases ("us") don't hit inside words ("Houston").
+        aliases = [re.escape(a.strip()) for a in country.value[0].split(",") if a.strip()]
+        if re.search(rf"\b({'|'.join(aliases)})\b", location, re.IGNORECASE):
+            return location
+        return f"{location}, {country_name}"
 
     def _parse_job_url_direct(self, soup: BeautifulSoup) -> str | None:
         """
