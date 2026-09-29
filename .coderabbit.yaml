@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit also reads AGENTS.md / CLAUDE.md as coding guidelines; the path
+# instructions below only cover what those files don't already say.
+language: en-AU
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  auto_review:
+    enabled: true
+    drafts: false
+    # job-tracker-tweaks is the working branch this fork builds images from.
+    base_branches:
+      - main
+      - job-tracker-tweaks
+  tools:
+    github-checks:
+      enabled: true
+
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/bun.lock"
+    - "!**/__pycache__/**"
+
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        This repository is public. Flag anything that looks like a credential,
+        token, or personal data being committed.
+    - path: "src/**/*.js"
+      instructions: |
+        - Tool handlers return error objects rather than throwing, so a bad
+          search never crashes the container.
+        - Request parameters are validated with the Zod schemas in src/schemas/;
+          new parameters need a schema entry, not ad-hoc checks.
+        - Log through the winston logger in src/logger.js, not console.
+        - Parameters are passed to the Python JobSpy process: check that user
+          input cannot inject extra CLI arguments or shell syntax.
+    - path: "jobspy/**/*.py"
+      instructions: |
+        Vendored JobSpy scrapers (including site scrapers added in this fork).
+        Scrapers should degrade to an empty result with a logged warning when a
+        site changes its markup or rate-limits, rather than failing the whole
+        multi-site search.
+
+chat:
+  auto_reply: true
