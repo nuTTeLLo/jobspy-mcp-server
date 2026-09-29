@@ -153,9 +153,25 @@ export async function searchJobsHandler(params) {
   try {
     logger.info("Starting job search with parameters", { params });
 
+    // The schema calls the site list `siteNames`, but callers naturally reach for the
+    // singular `site_name` -- it is what jobspy's own CLI flag is called, and what the
+    // REST body documents. `/api` camel-cases the body, so `site_name` arrives here as
+    // `siteName`, which the schema does not know and `.parse()` therefore strips, leaving
+    // `siteNames` to fall back to its default of 'indeed'. The result was a 200 with rows
+    // from the wrong board and no warning, so accept the aliases before validation.
+    const normalizedParams = { ...params };
+    for (const alias of ['siteName', 'site_name', 'site_names']) {
+      if (normalizedParams[alias] !== undefined) {
+        if (normalizedParams.siteNames === undefined) {
+          normalizedParams.siteNames = normalizedParams[alias];
+        }
+        delete normalizedParams[alias];
+      }
+    }
+
     // Clean params by removing empty strings and 0 values
     const cleanedParams = {};
-    for (const [key, value] of Object.entries(params)) {
+    for (const [key, value] of Object.entries(normalizedParams)) {
       // Skip null, undefined, empty strings, and 0 values
       if (
         value === null ||
