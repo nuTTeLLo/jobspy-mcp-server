@@ -48,6 +48,44 @@ _USER_AGENT = (
     "(KHTML, like Gecko) Version/17.0 Safari/605.1.15"
 )
 
+# Seek's `where` parameter wants "Melbourne VIC", not "Melbourne, Victoria, Australia".
+# Given the latter it resolves nothing and returns totalCount 0 with no error, so a caller
+# passing the conventional "City, State, Country" form silently gets no results at all.
+_AU_STATES = {
+    "australian capital territory": "ACT",
+    "new south wales": "NSW",
+    "northern territory": "NT",
+    "queensland": "QLD",
+    "south australia": "SA",
+    "tasmania": "TAS",
+    "victoria": "VIC",
+    "western australia": "WA",
+}
+
+_COUNTRY_WORDS = {"australia", "au", "aus", "new zealand", "nz", "nzl"}
+
+
+def _normalize_location(location: str) -> str:
+    """Rewrite a "City, State, Country" location into the form Seek's API accepts.
+
+    Drops a trailing country, expands full state names to Seek's abbreviations, and joins
+    what is left with spaces. Anything it does not recognise is passed through unchanged --
+    the point is to stop the common form failing silently, not to validate input.
+    """
+    parts = [p.strip() for p in location.split(",") if p.strip()]
+    if not parts:
+        return location
+
+    if len(parts) > 1 and parts[-1].lower() in _COUNTRY_WORDS:
+        parts = parts[:-1]
+
+    # A bare state is ambiguous to Seek ("Victoria" resolves to Victoria Park WA 6100), so
+    # leave a single remaining part alone rather than guessing at it.
+    if len(parts) > 1:
+        parts = [_AU_STATES.get(p.lower(), p) for p in parts]
+
+    return " ".join(parts)
+
 _WORK_TYPE_MAP = {
     "full time": JobType.FULL_TIME,
     "part time": JobType.PART_TIME,
@@ -77,12 +115,19 @@ class Seek(Scraper):
         self.scraper_input = None
         self.session = None
         self.region = _REGIONS[Country.AUSTRALIA]
+        self.country = Country.AUSTRALIA
         self.delay = 2
         self.band_delay = 2
 
     def scrape(self, scraper_input: ScraperInput) -> JobResponse:
         self.scraper_input = scraper_input
-        self.region = _REGIONS.get(scraper_input.country, _REGIONS[Country.AUSTRALIA])
+        # Seek only operates in AU and NZ, so any other country -- including jobspy's
+        # default of USA, which callers rarely set -- means AU. Keep the resolved country
+        # rather than reading scraper_input.country back later, or AU jobs get tagged USA.
+        self.country = (
+            scraper_input.country if scraper_input.country in _REGIONS else Country.AUSTRALIA
+        )
+        self.region = _REGIONS[self.country]
         self.session = create_session(
             proxies=self.proxies, ca_cert=self.ca_cert, is_tls=False, has_retry=True
         )
@@ -138,7 +183,7 @@ class Seek(Scraper):
         if self.scraper_input.is_remote:
             params["workarrangement"] = "2"  # Seek code for remote
         elif self.scraper_input.location:
-            params["where"] = self.scraper_input.location
+            params["where"] = _normalize_location(self.scraper_input.location)
         if self.scraper_input.hours_old:
             params["daterange"] = max(1, math.ceil(self.scraper_input.hours_old / 24))
 
@@ -146,7 +191,16 @@ class Seek(Scraper):
         try:
             response = self.session.get(url, params=params, timeout=self.scraper_input.request_timeout)
             response.raise_for_status()
-            return response.json()
+            payload = response.json()
+            # Seek echoes back the location it resolved, and omits it when it resolved
+            # nothing -- which is the only way to tell an unrecognised `where` from a
+            # genuinely empty day, since both return totalCount 0 and HTTP 200.
+            if params.get("where") and not (payload.get("location") or {}).get("description"):
+                log.warning(
+                    f"Seek: could not resolve location {params['where']!r} "
+                    f"(from {self.scraper_input.location!r}); results will be empty"
+                )
+            return payload
         except Exception as e:
             log.error(f"Seek: error fetching search page {page} - {str(e)}")
             return None
@@ -169,7 +223,7 @@ class Seek(Scraper):
         city = locations[0].get("label") if locations else job.get("location")
         location = Location(
             city=city,
-            country=self.scraper_input.country or Country.AUSTRALIA,
+            country=self.country,
         )
 
         work_arrangements = (job.get("workArrangements") or {}).get("displayText")
