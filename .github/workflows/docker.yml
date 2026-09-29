@@ -37,7 +37,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=latest,enable=true
+            # k3s runs :latest, so a PR build must never claim it.
+            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
