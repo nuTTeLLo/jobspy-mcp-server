@@ -135,6 +135,9 @@ def scrape_jobs(
             job_url = job_data["job_url"]
             job_data["site"] = site
             job_data["company"] = job_data["company_name"]
+            job_data["apply_type"] = (
+                job_data["apply_type"].value if job_data["apply_type"] else None
+            )
             job_data["job_type"] = (
                 ", ".join(job_type.value[0] for job_type in job_data["job_type"])
                 if job_data["job_type"]

@@ -320,6 +320,7 @@ desired_order = [
     "site",
     "job_url",
     "job_url_direct",
+    "apply_type",
     "title",
     "company",
     "location",

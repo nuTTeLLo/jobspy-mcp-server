@@ -184,7 +184,7 @@ Searches for jobs across various job listing websites.
 | results_wanted | integer | Number of results wanted | 20 |
 | hours_old | integer | How many hours old the jobs can be | 72 |
 | country_indeed | string | Country for Indeed search | "USA" |
-| linkedin_fetch_description | boolean | Whether to fetch LinkedIn job descriptions (slower) | false |
+| linkedin_fetch_description | boolean | Whether to fetch full LinkedIn and Seek job details — descriptions and apply type (slower) | false |
 | format | string | Output format (json or csv) | "json" |
 | output | string | Output filename without extension | "jobs" |
 

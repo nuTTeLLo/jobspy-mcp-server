@@ -86,6 +86,9 @@ job_search_query = """
                 }}
                 }}
             }}
+            indeedApply {{
+                scopes
+            }}
             recruit {{
                 viewJobUrl
                 detailedSalary

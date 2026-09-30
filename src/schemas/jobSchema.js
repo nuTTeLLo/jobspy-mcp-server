@@ -25,6 +25,10 @@ export const jobSpySchema = z.object({
   jobUrl: z.string().nullish().optional(),
   jobUrlDirect: z.string().nullish().optional(),
 
+  // How the job is applied to: 'easy_apply' (the board's own form) or 'external'.
+  // Null when the board was not asked (LinkedIn/Seek need linkedinFetchDescription).
+  applyType: z.enum(['easy_apply', 'external']).nullish().optional(),
+
   // Misc Information
   location: z.string().nullish().optional(),
   country: z.string().nullish().optional(),

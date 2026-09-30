@@ -7,6 +7,7 @@ import time
 from datetime import datetime, timezone
 
 from jobspy.model import (
+    ApplyType,
     Compensation,
     CompensationInterval,
     Country,
@@ -229,9 +230,11 @@ class Seek(Scraper):
         work_arrangements = (job.get("workArrangements") or {}).get("displayText")
         is_remote = bool(work_arrangements) and "remote" in work_arrangements.lower()
 
-        description = None
+        # The search API says nothing about how a job is applied to; that, like the
+        # description, needs the per-job details call.
+        description = apply_type = None
         if self.scraper_input.linkedin_fetch_description:
-            description = self._fetch_description(job_id)
+            description, apply_type = self._fetch_details(job_id)
 
         return JobPost(
             id=f"se-{job_id}",
@@ -245,9 +248,10 @@ class Seek(Scraper):
             is_remote=is_remote,
             work_from_home_type=work_arrangements,
             description=description,
+            apply_type=apply_type,
         )
 
-    def _fetch_description(self, job_id: str) -> str | None:
+    def _fetch_details(self, job_id: str) -> tuple[str | None, ApplyType | None]:
         url = f"https://{self.region['host']}/graphql"
         payload = {
             "operationName": "jobDetails",
@@ -260,7 +264,7 @@ class Seek(Scraper):
             },
             "query": (
                 "query jobDetails($jobId: ID!) { jobDetails(id: $jobId) "
-                "{ job { content(platform: WEB) } } }"
+                "{ job { content(platform: WEB) isLinkOut } } }"
             ),
         }
         try:
@@ -275,19 +279,26 @@ class Seek(Scraper):
                 timeout=self.scraper_input.request_timeout,
             )
             response.raise_for_status()
-            content = (
+            job = (
                 (((response.json() or {}).get("data") or {}).get("jobDetails") or {})
                 .get("job")
                 or {}
-            ).get("content")
-            if not content:
-                return None
-            if self.scraper_input.description_format == DescriptionFormat.MARKDOWN:
-                return markdown_converter(content)
-            return content
+            )
+            # isLinkOut marks the "Apply" button that leaves for the employer's site;
+            # without it the job is applied to through Seek's own Quick apply.
+            is_link_out = job.get("isLinkOut")
+            apply_type = (
+                None
+                if is_link_out is None
+                else ApplyType.EXTERNAL if is_link_out else ApplyType.EASY_APPLY
+            )
+            content = job.get("content")
+            if content and self.scraper_input.description_format == DescriptionFormat.MARKDOWN:
+                content = markdown_converter(content)
+            return content or None, apply_type
         except Exception as e:
-            log.error(f"Seek: error fetching description for {job_id} - {str(e)}")
-            return None
+            log.error(f"Seek: error fetching details for {job_id} - {str(e)}")
+            return None, None
 
     @staticmethod
     def _parse_job_type(work_types: list | None) -> list[JobType] | None:
