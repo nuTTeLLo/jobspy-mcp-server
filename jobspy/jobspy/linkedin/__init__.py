@@ -21,6 +21,7 @@ from jobspy.linkedin.util import (
     parse_company_industry
 )
 from jobspy.model import (
+    ApplyType,
     JobPost,
     Location,
     JobResponse,
@@ -241,6 +242,7 @@ class LinkedIn(Scraper):
             company_industry=job_details.get("company_industry"),
             description=job_details.get("description"),
             job_url_direct=job_details.get("job_url_direct"),
+            apply_type=job_details.get("apply_type"),
             emails=extract_emails_from_text(description),
             company_logo=job_details.get("company_logo"),
             job_function=job_details.get("job_function"),
@@ -296,6 +298,7 @@ class LinkedIn(Scraper):
             "company_industry": parse_company_industry(soup),
             "job_type": parse_job_type(soup),
             "job_url_direct": self._parse_job_url_direct(soup),
+            "apply_type": self._parse_apply_type(response.text),
             "company_logo": company_logo,
             "job_function": job_function,
         }
@@ -355,6 +358,18 @@ class LinkedIn(Scraper):
         if re.search(rf"\b({'|'.join(aliases)})\b", location, re.IGNORECASE):
             return location
         return f"{location}, {country_name}"
+
+    @staticmethod
+    def _parse_apply_type(html: str) -> ApplyType | None:
+        """
+        The public job page tags its apply button `apply-link-onsite` for Easy Apply and
+        `apply-link-offsite` when it hands off to the employer's site.
+        """
+        if "apply-link-onsite" in html:
+            return ApplyType.EASY_APPLY
+        if "apply-link-offsite" in html:
+            return ApplyType.EXTERNAL
+        return None
 
     def _parse_job_url_direct(self, soup: BeautifulSoup) -> str | None:
         """

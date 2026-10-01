@@ -236,12 +236,21 @@ class DescriptionFormat(Enum):
     HTML = "html"
 
 
+class ApplyType(Enum):
+    # Applied through the job board's own form (LinkedIn Easy Apply, Seek Quick apply,
+    # Indeed Apply) rather than handed off to the employer's site.
+    EASY_APPLY = "easy_apply"
+    EXTERNAL = "external"
+
+
 class JobPost(BaseModel):
     id: str | None = None
     title: str
     company_name: str | None
     job_url: str
     job_url_direct: str | None = None
+    # None when the board was not asked, e.g. LinkedIn/Seek without full descriptions.
+    apply_type: ApplyType | None = None
     location: Optional[Location]
 
     description: str | None = None

@@ -7,6 +7,7 @@ from typing import Tuple
 from jobspy.indeed.constant import job_search_query, api_headers
 from jobspy.indeed.util import is_job_remote, get_compensation, get_job_type
 from jobspy.model import (
+    ApplyType,
     Scraper,
     ScraperInput,
     Site,
@@ -232,6 +233,13 @@ class Indeed(Scraper):
             job_url=job_url,
             job_url_direct=(
                 job["recruit"].get("viewJobUrl") if job.get("recruit") else None
+            ),
+            # Indeed Apply jobs list the platforms they can be applied on; the rest
+            # come back with no scopes and send the candidate to the employer's site.
+            apply_type=(
+                ApplyType.EASY_APPLY
+                if (job.get("indeedApply") or {}).get("scopes")
+                else ApplyType.EXTERNAL
             ),
             emails=extract_emails_from_text(description) if description else None,
             is_remote=is_job_remote(job, description),

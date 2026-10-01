@@ -118,7 +118,7 @@ export const searchParams = {
   linkedinFetchDescription: z
     .any()
     .describe(
-      'Whether to fetch LinkedIn job descriptions (slower). Accepts any truthy value.'
+      'Whether to fetch full job details for LinkedIn and Seek (slower): descriptions, and the apply type (easy apply vs external). Accepts any truthy value.'
     )
     .transform((val) => {
       // Convert any truthy value to boolean
