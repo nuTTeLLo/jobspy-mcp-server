@@ -1,0 +1,7 @@
+This directory vendors JobSpy (https://github.com/speedyapply/JobSpy), version 1.1.82,
+by Cullen Watson and contributors, distributed under the MIT License (see LICENSE in
+this directory).
+
+The vendored copy is modified: it adds a Seek (seek.com.au) scraper, reports each
+posting's apply type (`apply_type`), scopes LinkedIn results by country, and handles
+"City, State, Country" locations for Seek.

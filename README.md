@@ -1,6 +1,6 @@
 # JobSpy MCP Server
 
-A Model Context Protocol (MCP) server that enables AI assistants like Claude to search for jobs across multiple job listing platforms using the [JobSpy](https://github.com/yourusername/jobspy) tool.
+A Model Context Protocol (MCP) server that enables AI assistants like Claude to search for jobs across multiple job listing platforms using the [JobSpy](https://github.com/speedyapply/JobSpy) tool.
 
 ## Features
 
@@ -20,7 +20,7 @@ A Model Context Protocol (MCP) server that enables AI assistants like Claude to 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/jobspy-mcp-server.git
+git clone https://github.com/nuTTeLLo/jobspy-mcp-server.git
 cd jobspy-mcp-server
 
 # Install dependencies
@@ -235,6 +235,14 @@ curl -X POST "http://localhost:9423/api" \
   }'
 ```  
 
+## Credits
+
+- [JobSpy](https://github.com/speedyapply/JobSpy) by Cullen Watson and contributors (MIT). A
+  modified copy is vendored in `jobspy/jobspy/`; it adds a Seek scraper and per-posting apply
+  type. See `jobspy/LICENSE` and `jobspy/NOTICE`.
+- [borgius/jobspy-mcp-server](https://github.com/borgius/jobspy-mcp-server), which this repo
+  is forked from.
+
 ## License
 
-MIT
+MIT, see `LICENSE`. The vendored JobSpy keeps its own MIT licence in `jobspy/LICENSE`.
