@@ -27,7 +27,7 @@ log = create_logger("Seek")
 # Seek only operates in AU and NZ. Everything else falls back to AU.
 _REGIONS = {
     Country.AUSTRALIA: {
-        "host": "www.seek.com.au",
+        "host": "au.seek.com",
         "site_key": "AU-Main",
         "locale": "en-AU",
         "country_code": "AU",
@@ -35,7 +35,7 @@ _REGIONS = {
         "timezone": "Australia/Sydney",
     },
     Country.NEWZEALAND: {
-        "host": "www.seek.co.nz",
+        "host": "nz.seek.com",
         "site_key": "NZ-Main",
         "locale": "en-NZ",
         "country_code": "NZ",
